@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Streetlight Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container nav">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          SmartStreetlight
+        </div>
+        <div class="status-group">
+          <span class="chip {% if summary.mongo_connected %}ok{% else %}warn{% endif %}">
+            MongoDB: {{ 'Online' if summary.mongo_connected else 'Demo' }}
+          </span>
+          <span class="chip {% if summary.redis_connected %}ok{% else %}warn{% endif %}">
+            Redis: {{ 'Online' if summary.redis_connected else 'Demo' }}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="container page">
+      <section class="hero-panel">
+        <div>
+          <p class="eyebrow">Smart city project</p>
+          <h1>Streetlight Control System</h1>
+          <p class="lead">
+            This project checks lamp status, energy usage and fault reports for smart city lighting.
+          </p>
+        </div>
+        <button class="primary-btn" onclick="refreshData()">Refresh</button>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stats-card">
+          <span>Total lamps</span>
+          <strong>{{ summary.total_lamps }}</strong>
+        </div>
+        <div class="stats-card">
+          <span>On</span>
+          <strong>{{ summary.on_count }}</strong>
+        </div>
+        <div class="stats-card">
+          <span>Dim</span>
+          <strong>{{ summary.dim_count }}</strong>
+        </div>
+        <div class="stats-card">
+          <span>Faults</span>
+          <strong>{{ summary.fault_count }}</strong>
+        </div>
+        <div class="stats-card accent">
+          <span>Energy used</span>
+          <strong>{{ summary.total_energy }} kWh</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Database setup</h2>
+        </div>
+
+        <div class="db-grid">
+          <article class="db-card mongo">
+            <span class="badge">MongoDB</span>
+            <h3>Long-term storage</h3>
+            <p>Stores lamp details, logs, maintenance records and historical readings.</p>
+          </article>
+
+          <article class="db-card redis">
+            <span class="badge">Redis</span>
+            <h3>Fast live data</h3>
+            <p>Stores current lamp state, quick updates and alerts for real-time decisions.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Streetlights</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Lamp ID</th>
+                <th>Zone</th>
+                <th>Status</th>
+                <th>Brightness</th>
+                <th>Power</th>
+                <th>Fault</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lamp in lamps %}
+                <tr>
+                  <td>{{ lamp.lamp_id }}</td>
+                  <td>{{ lamp.zone }}</td>
+                  <td><span class="status {{ lamp.status }}">{{ lamp.status }}</span></td>
+                  <td>{{ lamp.brightness }}%</td>
+                  <td>{{ lamp.power_usage }}W</td>
+                  <td>{{ 'Yes' if lamp.fault else 'No' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function refreshData() {
+        fetch('/api/refresh')
+          .then(response => response.json())
+          .then(() => {
+            window.location.reload();
+          })
+          .catch(error => {
+            console.error('Refresh failed:', error);
+          });
+      }
+    </script>
+  </body>
+</html>
